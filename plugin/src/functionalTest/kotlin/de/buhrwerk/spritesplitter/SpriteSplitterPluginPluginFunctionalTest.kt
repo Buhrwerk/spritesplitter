@@ -3,35 +3,77 @@
  */
 package de.buhrwerk.spritesplitter
 
-import java.io.File
+import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
-import kotlin.test.Test
-import kotlin.test.assertTrue
+import org.junit.Test
+import java.io.File
 
 /**
  * A simple functional test for the 'de.buhrwerk.spritesplitter.greeting' plugin.
  */
 class SpriteSplitterPluginPluginFunctionalTest {
-    @Test fun `can run task`() {
+
+    @Test
+    fun splitsSpriteWithConfigFile() {
         // Setup the test build
         val projectDir = File("build/functionalTest")
         projectDir.mkdirs()
         projectDir.resolve("settings.gradle").writeText("")
-        projectDir.resolve("build.gradle").writeText("""
+        projectDir.resolve("build.gradle").writeText(
+            """
             plugins {
-                id('de.buhrwerk.spritesplitter.greeting')
+                id('de.buhrwerk.spritesplitter')
             }
-        """)
+            
+            spriteSplitter {
+                create("colors") {
+                    sprite.set(file("assets/colors-32x32.png"))
+                    config.set(file("assets/colors-32x32.json"))
+                    outDir.set(file("out"))
+                }
+            }
+        """.trimIndent()
+        )
+
+        copySourceFiles(projectDir)
 
         // Run the build
         val runner = GradleRunner.create()
         runner.forwardOutput()
         runner.withPluginClasspath()
-        runner.withArguments("greeting")
+        runner.withArguments("spriteSplitter-colors")
         runner.withProjectDir(projectDir)
-        val result = runner.build()
+        runner.build()
 
         // Verify the result
-        assertTrue(result.output.contains("Hello from plugin 'de.buhrwerk.spritesplitter.greeting'"))
+
+        val outDir = File(projectDir, "out")
+        assertThat(outDir).exists()
+
+        val imageFiles = outDir.listFiles() ?: throw KotlinNullPointerException("No Image files")
+        assertThat(imageFiles)
+            .hasSize(6)
+            .extracting("name")
+            .contains(
+                "colors-32x32-Tag1_000.png",
+                "colors-32x32-Tag1_001.png",
+                "colors-32x32-Tag1_002.png",
+                "colors-32x32-Tag2_000.png",
+                "colors-32x32-Tag2_001.png",
+                "colors-32x32-Tag2_002.png",
+            )
+
+    }
+
+    private fun copySourceFiles(projectDir: File) {
+        val assetDir = File(projectDir, "assets")
+        assetDir.mkdirs()
+
+        val sourceDirPath =
+            this.javaClass.getResource("sourceFiles")?.file
+                ?: throw KotlinNullPointerException("Source files not found")
+        val sourceDir = File(sourceDirPath)
+
+        sourceDir.copyRecursively(assetDir, overwrite = true)
     }
 }

@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("com.beust:klaxon:${project.extra["klaxonVersion"]}")
+    api("com.beust:klaxon:${project.extra["klaxonVersion"]}")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${project.extra["junitVersion"]}")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:${project.extra["junitVersion"]}")
