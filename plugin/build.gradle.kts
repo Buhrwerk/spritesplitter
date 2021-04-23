@@ -1,6 +1,8 @@
 plugins {
     `java-gradle-plugin`
     id("org.jetbrains.kotlin.jvm") version "1.4.31"
+    id("com.gradle.plugin-publish") version "0.14.0"
+    id("maven-publish")
 }
 
 repositories {
@@ -13,11 +15,9 @@ dependencies {
 
     implementation(project(":splitter"))
 
-    // Use the Kotlin test library.
-    testImplementation("org.jetbrains.kotlin:kotlin-test")
-
-    // Use the Kotlin JUnit integration.
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${project.extra["junitVersion"]}")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:${project.extra["junitVersion"]}")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:${project.extra["junitVersion"]}")
     testImplementation("org.assertj:assertj-core:${project.extra["assertJVersion"]}")
 }
 
@@ -26,6 +26,16 @@ gradlePlugin {
         id = "de.buhrwerk.spritesplitter"
         implementationClass = "de.buhrwerk.spritesplitter.SpriteSplitterPlugin"
     }
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 val functionalTestSourceSet = sourceSets.create("functionalTest") {

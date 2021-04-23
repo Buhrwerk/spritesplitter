@@ -2,10 +2,9 @@ package de.buhrwerk.spritesplitter
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import java.io.File
 import javax.inject.Inject
 
@@ -15,20 +14,43 @@ abstract class SpriteSplitterTask(
 ) : DefaultTask() {
 
     @Inject
-    constructor(): this(Splitter(), ConfigReader())
+    constructor() : this(Splitter(), ConfigReader())
 
     @get:InputFile
-    abstract val sprite: Property<File>
-
-    @get:InputFile
-    abstract val config: Property<File>
+    abstract val spriteSheet: Property<File>
 
     @get:OutputDirectory
     abstract val outDir: DirectoryProperty
 
+    @get:Optional
+    @get:InputFile
+    abstract val config: Property<File>
+
+    @get:Optional
+    @get:Input
+    abstract val width: Property<Int>
+
+    @get:Optional
+    @get:Input
+    abstract val height: Property<Int>
+
+    @get:Optional
+    @get:Input
+    abstract val rowTags: ListProperty<String>
+
     @TaskAction
     fun split() {
-        val splitterConfig = configReader.readJsonFile(config.get())
-        splitter.split(sprite.get(), outDir.asFile.get(), splitterConfig)
+        val splitterConfig = buildConfig()
+        splitter.split(spriteSheet.get(), outDir.asFile.get(), splitterConfig)
+    }
+
+    private fun buildConfig(): SplitConfig {
+        if (config.isPresent)
+            return configReader.readJsonFile(config.get())
+        return SplitConfig(
+            width = width.getOrElse(SplitConfig.DEFAULT_WIDTH),
+            height = height.getOrElse(SplitConfig.DEFAULT_HEIGHT),
+            rowTags = rowTags.getOrElse(emptyList())
+        )
     }
 }

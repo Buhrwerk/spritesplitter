@@ -60,14 +60,18 @@ internal class SplitterTest {
         val file = loadImage("colors-32x32.png")
         val outDir = File(tmpDir, "out")
 
-        splitter.split(file, outDir, SplitConfig(999, 999, frames = listOf(
-            Frame("Tag1", 0, 0, 0, 32, 32),
-            Frame("Tag1", 1, 32, 0, 32, 32),
-            Frame("Tag1", 2, 64, 0, 32, 32),
-            Frame("Tag2", 0, 0, 32, 32, 32),
-            Frame("Tag2", 1, 32, 32, 32, 32),
-            Frame("Tag2", 2, 64, 32, 32, 32),
-        )))
+        splitter.split(
+            file, outDir, SplitConfig(
+                999, 999, frames = listOf(
+                    Frame("Tag1", 0, 0, 0, 32, 32),
+                    Frame("Tag1", 1, 32, 0, 32, 32),
+                    Frame("Tag1", 2, 64, 0, 32, 32),
+                    Frame("Tag2", 0, 0, 32, 32, 32),
+                    Frame("Tag2", 1, 32, 32, 32, 32),
+                    Frame("Tag2", 2, 64, 32, 32, 32),
+                )
+            )
+        )
 
         val imageFiles = outDir.listFiles()
         requireNotNull(imageFiles) { "no Images found!" }
@@ -78,6 +82,27 @@ internal class SplitterTest {
             "colors-32x32-Tag2_000.png",
             "colors-32x32-Tag2_001.png",
             "colors-32x32-Tag2_002.png",
+        )
+
+        assertImageSizes(imageFiles, 32)
+    }
+
+    @Test
+    fun `split by rowTags and size`() {
+        val file = loadImage("colors-32x32.png")
+        val outDir = File(tmpDir, "out")
+
+        splitter.split(file, outDir, SplitConfig(32, 32, rowTags = listOf("TagA", "TagB")))
+
+        val imageFiles = outDir.listFiles()
+        requireNotNull(imageFiles) { "no Images found!" }
+        assertThat(imageFiles).extracting("name").contains(
+            "colors-32x32-TagA_000.png",
+            "colors-32x32-TagA_001.png",
+            "colors-32x32-TagA_002.png",
+            "colors-32x32-TagB_000.png",
+            "colors-32x32-TagB_001.png",
+            "colors-32x32-TagB_002.png",
         )
 
         assertImageSizes(imageFiles, 32)

@@ -3,6 +3,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.4.32"
+    id("java-library")
+    id("maven-publish")
 }
 
 group = "de.buhrwerk.spritesplitter"
@@ -21,6 +23,17 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:${project.extra["junitVersion"]}")
     testImplementation("org.assertj:assertj-core:${project.extra["assertJVersion"]}")
     testImplementation("io.mockk:mockk:${project.extra["mockkVersion"]}")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("spritesplitter") {
+            from(components["java"])
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
 }
 
 tasks.test {

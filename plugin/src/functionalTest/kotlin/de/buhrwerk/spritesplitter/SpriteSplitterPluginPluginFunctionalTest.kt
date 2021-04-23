@@ -5,21 +5,32 @@ package de.buhrwerk.spritesplitter
 
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.GradleRunner
-import org.junit.Test
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.io.File
 
 /**
  * A simple functional test for the 'de.buhrwerk.spritesplitter.greeting' plugin.
  */
+
+private const val BUILD_FILE_NAME = "build.gradle"
 class SpriteSplitterPluginPluginFunctionalTest {
+
+    private val projectDir = File("build/functionalTest")
+
+    @BeforeEach
+    fun setUp() {
+        if (projectDir.exists()) {
+            projectDir.deleteRecursively()
+        }
+        projectDir.mkdirs()
+        projectDir.mkdirs()
+        projectDir.resolve("settings.gradle").writeText("")
+    }
 
     @Test
     fun splitsSpriteWithConfigFile() {
-        // Setup the test build
-        val projectDir = File("build/functionalTest")
-        projectDir.mkdirs()
-        projectDir.resolve("settings.gradle").writeText("")
-        projectDir.resolve("build.gradle").writeText(
+        projectDir.resolve(BUILD_FILE_NAME).writeText(
             """
             plugins {
                 id('de.buhrwerk.spritesplitter')
@@ -27,30 +38,23 @@ class SpriteSplitterPluginPluginFunctionalTest {
             
             spriteSplitter {
                 create("colors") {
-                    sprite.set(file("assets/colors-32x32.png"))
+                    spriteSheet.set(file("assets/colors-32x32.png"))
                     config.set(file("assets/colors-32x32.json"))
                     outDir.set(file("out"))
                 }
             }
         """.trimIndent()
         )
-
         copySourceFiles(projectDir)
 
         // Run the build
-        val runner = GradleRunner.create()
-        runner.forwardOutput()
-        runner.withPluginClasspath()
-        runner.withArguments("spriteSplitter-colors")
-        runner.withProjectDir(projectDir)
-        runner.build()
+        run("spriteSplitter-colors")
 
         // Verify the result
-
         val outDir = File(projectDir, "out")
         assertThat(outDir).exists()
 
-        val imageFiles = outDir.listFiles() ?: throw KotlinNullPointerException("No Image files")
+        val imageFiles = outDir.requireFileList()
         assertThat(imageFiles)
             .hasSize(6)
             .extracting("name")
@@ -65,6 +69,114 @@ class SpriteSplitterPluginPluginFunctionalTest {
 
     }
 
+    @Test
+    fun splitsSpriteWithRowNames() {
+        projectDir.resolve(BUILD_FILE_NAME).writeText(
+            """
+            plugins {
+                id('de.buhrwerk.spritesplitter')
+            }
+            
+            spriteSplitter {
+                create("colors") {
+                    spriteSheet.set(file("assets/colors-32x32.png"))
+                    outDir.set(file("out"))
+                    width.set(32)
+                    height.set(32)
+                    rowTags.set(["TagA","TagB"])
+                }
+            }
+        """.trimIndent()
+        )
+        copySourceFiles(projectDir)
+
+        run("spriteSplitter-colors")
+
+        // Verify the result
+        val outDir = File(projectDir, "out")
+        assertThat(outDir).exists()
+
+        val imageFiles = outDir.requireFileList()
+        assertThat(imageFiles)
+            .hasSize(6)
+            .extracting("name")
+            .contains(
+                "colors-32x32-TagA_000.png",
+                "colors-32x32-TagA_001.png",
+                "colors-32x32-TagA_002.png",
+                "colors-32x32-TagB_000.png",
+                "colors-32x32-TagB_001.png",
+                "colors-32x32-TagB_002.png",
+            )
+    }
+
+    @Test
+    fun splitsMultipleSprites() {
+        projectDir.resolve(BUILD_FILE_NAME).writeText(
+            """
+            plugins {
+                id('de.buhrwerk.spritesplitter')
+            }
+            
+            spriteSplitter {
+                create("colors") {
+                    spriteSheet.set(file("assets/colors-32x32.png"))
+                    outDir.set(file("out/withoutJson"))
+                    width.set(32)
+                    height.set(32)
+                    rowTags.set(["TagA","TagB"])
+                }
+                create("colors2") {
+                    spriteSheet.set(file("assets/colors-32x32.png"))
+                    outDir.set(file("out/withJson"))
+                    config.set(file("assets/colors-32x32.json"))
+                }
+            }
+        """.trimIndent()
+        )
+        copySourceFiles(projectDir)
+
+        run("spriteSplitter")
+
+        // Verify the result
+        val outDir = File(projectDir, "out")
+        assertThat(outDir).exists()
+
+        val withoutJsonFiles = File(outDir, "withoutJson").requireFileList()
+        assertThat(withoutJsonFiles)
+            .hasSize(6)
+            .extracting("name")
+            .contains(
+                "colors-32x32-TagA_000.png",
+                "colors-32x32-TagA_001.png",
+                "colors-32x32-TagA_002.png",
+                "colors-32x32-TagB_000.png",
+                "colors-32x32-TagB_001.png",
+                "colors-32x32-TagB_002.png",
+            )
+        val withJsonFiles = File(outDir, "withJson").requireFileList()
+        assertThat(withJsonFiles)
+            .hasSize(6)
+            .extracting("name")
+            .contains(
+                "colors-32x32-Tag1_000.png",
+                "colors-32x32-Tag1_001.png",
+                "colors-32x32-Tag1_002.png",
+                "colors-32x32-Tag2_000.png",
+                "colors-32x32-Tag2_001.png",
+                "colors-32x32-Tag2_002.png",
+            )
+    }
+
+    private fun run(task: String) {
+        val runner = GradleRunner.create()
+        runner.forwardOutput()
+        runner.withPluginClasspath()
+        runner.withArguments(task)
+        runner.withProjectDir(projectDir)
+        runner.build()
+    }
+
     private fun copySourceFiles(projectDir: File) {
         val assetDir = File(projectDir, "assets")
         assetDir.mkdirs()
@@ -76,4 +188,6 @@ class SpriteSplitterPluginPluginFunctionalTest {
 
         sourceDir.copyRecursively(assetDir, overwrite = true)
     }
+
+    private fun File.requireFileList() = listFiles() ?: throw KotlinNullPointerException("No Image files")
 }

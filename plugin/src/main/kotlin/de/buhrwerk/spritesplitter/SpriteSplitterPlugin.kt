@@ -5,7 +5,9 @@ package de.buhrwerk.spritesplitter
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.domainObjectContainer
 import org.gradle.kotlin.dsl.newInstance
@@ -25,27 +27,32 @@ class SpriteSplitterPlugin : Plugin<Project> {
         }
         project.extensions.add("spriteSplitter", splitterConfig)
         // Register a task
+        val splitterTasks = mutableListOf<Task>()
         splitterConfig.all { config ->
-            project.tasks.register("spriteSplitter-${config.name}", SpriteSplitterTask::class.java) { task ->
-                task.sprite.set(config.sprite)
+            val task = project.tasks.register("spriteSplitter-${config.name}", SpriteSplitterTask::class.java) { task ->
+                task.spriteSheet.set(config.spriteSheet)
                 task.config.set(config.config)
                 task.outDir.set(config.outDir)
+                task.width.set(config.width)
+                task.height.set(config.height)
+                task.rowTags.set(config.rowTags)
             }
+            splitterTasks.add(task.get())
         }
-
-        project.tasks.register("greeting") {
-            it.doLast {
-                println("hello World")
-                println(project.extensions.getByName("spriteSplitter"))
+        project.tasks.register("spriteSplitter") { allTask ->
+            splitterTasks.forEach { task ->
+                allTask.dependsOn(task)
             }
-
         }
     }
 }
 
 abstract class SplitterConfigExtension @Inject constructor(val name: String) {
 
-    abstract val sprite: Property<File>
+    abstract val spriteSheet: Property<File>
     abstract val config: Property<File>
     abstract val outDir: DirectoryProperty
+    abstract val width: Property<Int>
+    abstract val height: Property<Int>
+    abstract val rowTags: ListProperty<String>
 }

@@ -5,14 +5,18 @@ import com.beust.klaxon.Klaxon
 import java.io.File
 
 data class SplitConfig(
-    val width: Int = 32,
-    val height: Int = 32,
-    val frames: List<Frame> = emptyList()
+    val width: Int = DEFAULT_WIDTH,
+    val height: Int = DEFAULT_HEIGHT,
+    val frames: List<Frame> = emptyList(),
+    val rowTags: List<String> = emptyList(),
 ) {
 
-    companion object {
+    fun getRowTag(rowIndex: Int): String = rowTags.getOrElse(rowIndex) { "row$rowIndex" }
 
+    companion object {
         val DEFAULT = SplitConfig()
+        const val DEFAULT_WIDTH = 32
+        const val DEFAULT_HEIGHT = 32
     }
 }
 
@@ -34,7 +38,7 @@ class ConfigReader(
             ?: throw AbortSplitterException("Specified Config file could not be parsed: ${jsonFile.absolutePath}")
 
         val frames = json.meta.frameTags.flatMap { frameTag ->
-            val asepriteFrames = (frameTag.from .. frameTag.to).map { index -> json.frames[index] }
+            val asepriteFrames = (frameTag.from..frameTag.to).map { index -> json.frames[index] }
             asepriteFrames.mapIndexed { index, frameMeta ->
                 Frame(
                     tagName = frameTag.name,
@@ -47,7 +51,7 @@ class ConfigReader(
             }
 
         }
-        return SplitConfig(frames = frames)
+        return SplitConfig(frames = frames, rowTags = listOf("TagA", "TagB"))
     }
 }
 
