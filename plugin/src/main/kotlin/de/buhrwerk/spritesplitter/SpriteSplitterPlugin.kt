@@ -38,6 +38,7 @@ class SpriteSplitterPlugin : Plugin<Project> {
                 task.width.set(config.width)
                 task.height.set(config.height)
                 task.rowTags.set(config.rowTags)
+
             }
             splitterTasks.add(task.get())
             project.tasks.withType<Delete> {
@@ -52,6 +53,7 @@ class SpriteSplitterPlugin : Plugin<Project> {
     }
 }
 
+@Suppress("LeakingThis")
 abstract class SplitterConfigExtension @Inject constructor(val name: String) {
 
     abstract val spriteSheet: Property<File>
@@ -60,4 +62,9 @@ abstract class SplitterConfigExtension @Inject constructor(val name: String) {
     abstract val width: Property<Int>
     abstract val height: Property<Int>
     abstract val rowTags: ListProperty<String>
+    abstract val ignoreEmpty: Property<Boolean>
+
+    init {
+        ignoreEmpty.convention(true)
+    }
 }

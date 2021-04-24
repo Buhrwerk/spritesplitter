@@ -14,6 +14,7 @@ import java.io.File
  */
 
 private const val BUILD_FILE_NAME = "build.gradle"
+private const val COLORS_TASK = "spriteSplitter-colors"
 class SpriteSplitterPluginPluginFunctionalTest {
 
     private val projectDir = File("build/functionalTest")
@@ -48,7 +49,7 @@ class SpriteSplitterPluginPluginFunctionalTest {
         copySourceFiles(projectDir)
 
         // Run the build
-        run("spriteSplitter-colors")
+        run(COLORS_TASK)
 
         // Verify the result
         val outDir = File(projectDir, "out")
@@ -56,15 +57,17 @@ class SpriteSplitterPluginPluginFunctionalTest {
 
         val imageFiles = outDir.requireFileList()
         assertThat(imageFiles)
-            .hasSize(6)
+            .hasSize(8)
             .extracting("name")
-            .contains(
+            .containsExactlyInAnyOrder(
                 "colors-32x32-Tag1_000.png",
                 "colors-32x32-Tag1_001.png",
                 "colors-32x32-Tag1_002.png",
                 "colors-32x32-Tag2_000.png",
                 "colors-32x32-Tag2_001.png",
                 "colors-32x32-Tag2_002.png",
+                "colors-32x32-Tag3_000.png",
+                "colors-32x32-Tag3_001.png",
             )
     }
 
@@ -82,14 +85,15 @@ class SpriteSplitterPluginPluginFunctionalTest {
                     outDir.set(file("out"))
                     width.set(32)
                     height.set(32)
-                    rowTags.set(["TagA","TagB"])
+                    rowTags.set(["TagA","TagB", "TagC"])
+                    ignoreEmpty.set(false)
                 }
             }
         """.trimIndent()
         )
         copySourceFiles(projectDir)
 
-        run("spriteSplitter-colors")
+        run(COLORS_TASK)
 
         // Verify the result
         val outDir = File(projectDir, "out")
@@ -97,15 +101,17 @@ class SpriteSplitterPluginPluginFunctionalTest {
 
         val imageFiles = outDir.requireFileList()
         assertThat(imageFiles)
-            .hasSize(6)
+            .hasSize(8)
             .extracting("name")
-            .contains(
+            .containsExactlyInAnyOrder(
                 "colors-32x32-TagA_000.png",
                 "colors-32x32-TagA_001.png",
                 "colors-32x32-TagA_002.png",
                 "colors-32x32-TagB_000.png",
                 "colors-32x32-TagB_001.png",
                 "colors-32x32-TagB_002.png",
+                "colors-32x32-TagC_000.png",
+                "colors-32x32-TagC_001.png",
             )
     }
 
@@ -123,7 +129,7 @@ class SpriteSplitterPluginPluginFunctionalTest {
                     outDir.set(file("out/withoutJson"))
                     width.set(32)
                     height.set(32)
-                    rowTags.set(["TagA","TagB"])
+                    rowTags.set(["TagA","TagB", "TagC"])
                 }
                 create("colors2") {
                     spriteSheet.set(file("assets/colors-32x32.png"))
@@ -143,27 +149,31 @@ class SpriteSplitterPluginPluginFunctionalTest {
 
         val withoutJsonFiles = File(outDir, "withoutJson").requireFileList()
         assertThat(withoutJsonFiles)
-            .hasSize(6)
+            .hasSize(8)
             .extracting("name")
-            .contains(
+            .containsExactlyInAnyOrder(
                 "colors-32x32-TagA_000.png",
                 "colors-32x32-TagA_001.png",
                 "colors-32x32-TagA_002.png",
                 "colors-32x32-TagB_000.png",
                 "colors-32x32-TagB_001.png",
                 "colors-32x32-TagB_002.png",
+                "colors-32x32-TagC_000.png",
+                "colors-32x32-TagC_001.png",
             )
         val withJsonFiles = File(outDir, "withJson").requireFileList()
         assertThat(withJsonFiles)
-            .hasSize(6)
+            .hasSize(8)
             .extracting("name")
-            .contains(
+            .containsExactlyInAnyOrder(
                 "colors-32x32-Tag1_000.png",
                 "colors-32x32-Tag1_001.png",
                 "colors-32x32-Tag1_002.png",
                 "colors-32x32-Tag2_000.png",
                 "colors-32x32-Tag2_001.png",
                 "colors-32x32-Tag2_002.png",
+                "colors-32x32-Tag3_000.png",
+                "colors-32x32-Tag3_001.png",
             )
     }
 
@@ -193,7 +203,7 @@ class SpriteSplitterPluginPluginFunctionalTest {
         copySourceFiles(projectDir)
 
         // Run the build
-        run("spriteSplitter-colors")
+        run(COLORS_TASK)
         run("clean")
 
         assertThat(File(projectDir, "out")).doesNotExist()

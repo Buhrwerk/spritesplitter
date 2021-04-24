@@ -9,6 +9,7 @@ data class SplitConfig(
     val height: Int = DEFAULT_HEIGHT,
     val frames: List<Frame> = emptyList(),
     val rowTags: List<String> = emptyList(),
+    val ignoreEmpty: Boolean = true
 ) {
 
     fun getRowTag(rowIndex: Int): String = rowTags.getOrElse(rowIndex) { "row$rowIndex" }

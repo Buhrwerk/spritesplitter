@@ -75,7 +75,7 @@ internal class SplitterTest {
 
         val imageFiles = outDir.listFiles()
         requireNotNull(imageFiles) { "no Images found!" }
-        assertThat(imageFiles).extracting("name").contains(
+        assertThat(imageFiles).extracting("name").containsExactlyInAnyOrder(
             "colors-32x32-Tag1_000.png",
             "colors-32x32-Tag1_001.png",
             "colors-32x32-Tag1_002.png",
@@ -92,17 +92,50 @@ internal class SplitterTest {
         val file = loadImage("colors-32x32.png")
         val outDir = File(tmpDir, "out")
 
-        splitter.split(file, outDir, SplitConfig(32, 32, rowTags = listOf("TagA", "TagB")))
+        splitter.split(file, outDir, SplitConfig(32, 32, rowTags = listOf("TagA", "TagB", "TagC")))
 
         val imageFiles = outDir.listFiles()
         requireNotNull(imageFiles) { "no Images found!" }
-        assertThat(imageFiles).extracting("name").contains(
+        assertThat(imageFiles).extracting("name").containsExactlyInAnyOrder(
             "colors-32x32-TagA_000.png",
             "colors-32x32-TagA_001.png",
             "colors-32x32-TagA_002.png",
             "colors-32x32-TagB_000.png",
             "colors-32x32-TagB_001.png",
             "colors-32x32-TagB_002.png",
+            "colors-32x32-TagC_000.png",
+            "colors-32x32-TagC_001.png",
+        )
+
+        assertImageSizes(imageFiles, 32)
+    }
+
+    @Test
+    fun `split by rowTags and size and writes empty images`() {
+        val file = loadImage("colors-32x32.png")
+        val outDir = File(tmpDir, "out")
+
+        splitter.split(
+            file, outDir, SplitConfig(
+                32,
+                32,
+                rowTags = listOf("TagA", "TagB", "TagC"),
+                ignoreEmpty = false
+            )
+        )
+
+        val imageFiles = outDir.listFiles()
+        requireNotNull(imageFiles) { "no Images found!" }
+        assertThat(imageFiles).extracting("name").containsExactlyInAnyOrder(
+            "colors-32x32-TagA_000.png",
+            "colors-32x32-TagA_001.png",
+            "colors-32x32-TagA_002.png",
+            "colors-32x32-TagB_000.png",
+            "colors-32x32-TagB_001.png",
+            "colors-32x32-TagB_002.png",
+            "colors-32x32-TagC_000.png",
+            "colors-32x32-TagC_001.png",
+            "colors-32x32-TagC_002.png",
         )
 
         assertImageSizes(imageFiles, 32)

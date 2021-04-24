@@ -38,6 +38,10 @@ abstract class SpriteSplitterTask(
     @get:Input
     abstract val rowTags: ListProperty<String>
 
+    @get:Optional
+    @get:Input
+    abstract val ignoreEmpty: Property<Boolean>
+
     @TaskAction
     fun split() {
         val splitterConfig = buildConfig()
@@ -50,7 +54,8 @@ abstract class SpriteSplitterTask(
         return SplitConfig(
             width = width.getOrElse(SplitConfig.DEFAULT_WIDTH),
             height = height.getOrElse(SplitConfig.DEFAULT_HEIGHT),
-            rowTags = rowTags.getOrElse(emptyList())
+            rowTags = rowTags.getOrElse(emptyList()),
+            ignoreEmpty = ignoreEmpty.getOrElse(true)
         )
     }
 }

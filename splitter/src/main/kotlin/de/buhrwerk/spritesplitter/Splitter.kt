@@ -1,5 +1,6 @@
 package de.buhrwerk.spritesplitter
 
+import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -37,7 +38,9 @@ class Splitter {
                 val tagName = splitConfig.getRowTag(rowIndex)
                 val name = String.format("%s-%s_%03d.png", baseName, tagName, columnIndex)
                 val image = sourceImage.getSubimage(columnIndex * width, rowIndex * height, width, height)
-                images.add(ImageData(name, image))
+                if (isNotEmpty(image) || !splitConfig.ignoreEmpty) {
+                    images.add(ImageData(name, image))
+                }
             }
         }
         return images
@@ -64,6 +67,11 @@ class Splitter {
             val outImage = sourceImage.getSubimage(frame.x, frame.y, frame.width, frame.height)
             ImageData(String.format("%s-%s_%03d.png", name, frame.tagName, frame.index), outImage)
         }
+    }
+
+    private fun isNotEmpty(image: BufferedImage): Boolean {
+        val rgb = image.getRGB(0, 0, image.width, image.height, null, 0, image.width)
+        return rgb.any { Color(it, true).alpha != 0 }
     }
 }
 
