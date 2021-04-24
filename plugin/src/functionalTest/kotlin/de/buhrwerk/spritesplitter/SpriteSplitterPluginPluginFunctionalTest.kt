@@ -66,7 +66,6 @@ class SpriteSplitterPluginPluginFunctionalTest {
                 "colors-32x32-Tag2_001.png",
                 "colors-32x32-Tag2_002.png",
             )
-
     }
 
     @Test
@@ -166,6 +165,38 @@ class SpriteSplitterPluginPluginFunctionalTest {
                 "colors-32x32-Tag2_001.png",
                 "colors-32x32-Tag2_002.png",
             )
+    }
+
+    @Test
+    fun cleansOutputDir() {
+        projectDir.resolve(BUILD_FILE_NAME).writeText(
+            """
+            plugins {
+                id('de.buhrwerk.spritesplitter')
+            }
+            
+            tasks.register("clean", Delete) {
+                doLast {
+                    println("Clean")
+                }
+            }
+            
+            spriteSplitter {
+                create("colors") {
+                    spriteSheet.set(file("assets/colors-32x32.png"))
+                    config.set(file("assets/colors-32x32.json"))
+                    outDir.set(file("out"))
+                }
+            }
+        """.trimIndent()
+        )
+        copySourceFiles(projectDir)
+
+        // Run the build
+        run("spriteSplitter-colors")
+        run("clean")
+
+        assertThat(File(projectDir, "out")).doesNotExist()
     }
 
     private fun run(task: String) {

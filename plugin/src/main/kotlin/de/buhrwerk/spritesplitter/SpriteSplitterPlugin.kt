@@ -9,8 +9,10 @@ import org.gradle.api.Task
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Delete
 import org.gradle.kotlin.dsl.domainObjectContainer
 import org.gradle.kotlin.dsl.newInstance
+import org.gradle.kotlin.dsl.withType
 import java.io.File
 import javax.inject.Inject
 
@@ -38,6 +40,9 @@ class SpriteSplitterPlugin : Plugin<Project> {
                 task.rowTags.set(config.rowTags)
             }
             splitterTasks.add(task.get())
+            project.tasks.withType<Delete> {
+                delete(config.outDir)
+            }
         }
         project.tasks.register("spriteSplitter") { allTask ->
             splitterTasks.forEach { task ->
